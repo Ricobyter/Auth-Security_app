@@ -3,6 +3,8 @@ import Home from "./pages/home/Home";
 import Layout from "./components/layout/Layout";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPasword";
+import Reset from "./pages/auth/Reset";
 
 function App() {
   return (
@@ -26,6 +28,16 @@ function App() {
             path="/register"
             element={
                 <Register />
+            } />
+          <Route
+            path="/forgot"
+            element={
+                <ForgotPassword />
+            } />
+          <Route
+            path="/resetPassword/:resetToken"
+            element={
+                <Reset />
             } />
 
         </Routes>

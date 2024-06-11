@@ -54,7 +54,7 @@ export default function Login() {
               
             /> */}
             <button className="--btn --btn-primary --btn-block" type="submit">
-              Submit
+              Login
             </button>
           </form>
           <Link to="/forgot">Forgot password</Link>

@@ -1,18 +1,69 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import { TiUserAddOutline } from "react-icons/ti";
 import { Link } from "react-router-dom";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
+import { FaTimes } from "react-icons/fa";
+import { BsCheck2All } from "react-icons/bs";
 
+const initialState = {
+  name: "",
+  email: "",
+  password: "",
+  password2: "",
+}
 export default function Register() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState(initialState);
 
-  const handleInputChange = () => {
-    // setEmail(e.target.value);
-    // setPassword(e.target.value)
+  const {name, email, password, password2} = formData
+  const handleInputChange = (e) => {
+  const {name, value} = e.target 
+  setFormData({...formData, [name]: value})
   };
+
+  const[upperCase, setUpperCase] = useState(false)
+  const[num, setNum] = useState(false)
+  const[sChar, setSChar] = useState(false)
+  const[passLength, setPassLength] = useState(false)
+
+  const timesIcon = <FaTimes color="red" size={15} />;
+  const checkIcon = <BsCheck2All color="green" size={15} />;
+
+  const switchIcon = (condition) => {
+    if(condition){
+      return checkIcon
+    }
+   return timesIcon
+  }
+
+
+useEffect(() => {
+  // Check Lower and Uppercase
+  if (password.match(/([a-z].*[A-Z])|([A-Z].*[a-z])/)) {
+    setUpperCase(true);
+  } else {
+    setUpperCase(false);
+  }
+  // Check for numbers
+  if (password.match(/([0-9])/)) {
+    setNum(true);
+  } else {
+    setNum(false);
+  }
+  // Check for special character
+  if (password.match(/([!,%,&,@,#,$,^,*,?,_,~])/)) {
+    setSChar(true);
+  } else {
+    setSChar(false);
+  }
+  // Check for PASSWORD LENGTH
+  if (password.length > 5) {
+    setPassLength(true);
+  } else {
+    setPassLength(false);
+  }
+}, [password]);
 
   const loginUser = () => {};
   return (
@@ -23,13 +74,15 @@ export default function Register() {
           <TiUserAddOutline size={35} color="#999" />
           </div>
           <h2>Register</h2>
-          <div className="--flex-center">
-            <button className="--btn --btn-google">Login with Google</button>
-          </div>
-          <br />
-          <p className="--text-center --fw-bold">or</p>
-
           <form onSubmit={loginUser}>
+            <input
+              type="text"
+              required
+              placeholder="Name"
+              name="name"
+              value={name}
+              onChange={handleInputChange}
+            />
             <input
               type="email"
               required
@@ -44,15 +97,50 @@ export default function Register() {
               value={password}
               onChange={handleInputChange}
             />
+            <PasswordInput
+              placeholder="Confirm Password"
+              name="password2"
+              value={password2}
+              onChange={handleInputChange}
+            />
+            {/* Pasword Strength */}
+            <Card cardClass={styles.group}>
+              <ul className="form-list">
+                <li>
+                  <span className={styles.indicator}>
+                    {switchIcon(upperCase)}
+                     &nbsp; At least one uppercase character
+                  </span>
+                </li>
+                <li>
+                  <span className={styles.indicator}>
+                    {switchIcon(num)}
+                     &nbsp; At least a single number
+                  </span>
+                </li>
+                <li>
+                  <span className={styles.indicator}>
+                    {switchIcon(sChar)}
+                     &nbsp; Atleast a single special character
+                  </span>
+                </li>
+                <li>
+                  <span className={styles.indicator}>
+                    {switchIcon(passLength)}
+                     &nbsp; At least 8 length
+                  </span>
+                </li>
+
+              </ul>
+            </Card>
             <button className="--btn --btn-primary --btn-block" type="submit">
-              Submit
+              Register
             </button>
           </form>
-          <Link to="/forgot">Forgot password</Link>
           <span className={styles.register}>
             <Link to="/">Home</Link>
-            <p>&nbsp; Don't have an account ? &nbsp;</p>
-            <Link to="/register">Register</Link>
+            <p>&nbsp; Already have an account ? &nbsp;</p>
+            <Link to="/Login">Login</Link>
           </span>
         </div>
       </Card>
