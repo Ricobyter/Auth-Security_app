@@ -31,7 +31,7 @@ const Header = () => {
             </button>
           </li>
           <li>
-            <NavLink className={activeLink} to="profile">
+            <NavLink className={activeLink} to="/profile">
               Profile
             </NavLink>
           </li>
