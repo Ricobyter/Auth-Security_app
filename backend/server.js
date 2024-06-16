@@ -8,6 +8,12 @@ const cookieParser = require("cookie-parser");
 // app
 const app = express();
 
+//? routes
+const userRoute = require("./routes/userRoute")
+
+//? middleware
+const errorHandler = require("./middleware/errorMiddleware")
+
 //? middleware
 app.use(express.json())
 app.use(express.urlencoded({extended:false}))
@@ -20,9 +26,16 @@ app.use(
     })
 )
 
+//?route setting
+app.use("/api/users", userRoute)
+
 app.get("/", (req, res) => {
   res.send("Hello World. Home page");
 });
+
+
+//* Error Handler
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 5000;
 
@@ -38,3 +51,8 @@ mongoose
   .catch((error) => {
     console.log(error);
   });
+
+
+
+
+  // npm run backend
