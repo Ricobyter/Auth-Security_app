@@ -45,7 +45,7 @@ const userSchema = mongoose.Schema(
         type: Boolean,
         default: false
       },
-    userAgents: {
+    userAgent: {
         type: Array,
         required:false,
         default: []
