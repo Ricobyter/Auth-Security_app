@@ -146,10 +146,15 @@ const logoutUser  = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 });
 
+const  getUser= asyncHandler(async (req, res) => {
+  res.send("Getuser")
+});
+
 module.exports = {
   registerUser,
   loginUser,
-  logoutUser
+  logoutUser,
+  getUser
 };
 
 //? Check register through --> body--> url-encoded
