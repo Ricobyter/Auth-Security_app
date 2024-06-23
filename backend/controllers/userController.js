@@ -147,14 +147,57 @@ const logoutUser  = asyncHandler(async (req, res) => {
 });
 
 const  getUser= asyncHandler(async (req, res) => {
-  res.send("Getuser")
+ const user = await User.findById(req.user._id)
+ //? This is becuase we are getting the value of user as req.user in p[rotect middleware]
+
+ if(user){
+  // const { _id, name, email, password, phone, bio, photo, isVerified } = user;
+  res.status(200).json(user);
+ } else{
+    res.status(404)
+    throw new Error("User not found")
+ }
+  
+});
+
+
+//? Update user
+const updateUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  if (user) {
+    const { email, name, phone, bio, photo} = user;
+    user.email = email;
+    user.name = req.body.name || name;
+    user.phone = req.body.phone || phone;
+    user.bio = req.body.bio || bio;
+    user.photo = req.body.photo || photo;
+
+    const updatedUser = await user.save() 
+
+    res.status(200).json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      password: updatedUser.password,
+      phone: updatedUser.phone,
+      bio: updatedUser.bio,
+      photo: updatedUser.photo,
+      isVerified: updatedUser.isVerified,
+      token: updatedUser.token,
+    });
+
+  }else{
+    res.status(404)
+    throw new Error("User not found")
+  }
 });
 
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
-  getUser
+  getUser,
+  updateUser
 };
 
 //? Check register through --> body--> url-encoded
