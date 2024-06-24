@@ -4,7 +4,9 @@ const asyncHandler = require("express-async-handler");
 const bcrypt = require("bcryptjs");
 const { generateToken } = require("../utils");
 var parser = require("ua-parser-js");
+const jwt = require("jsonwebtoken");
 
+//? Register
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -72,6 +74,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
+//? Login
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -111,7 +114,7 @@ const loginUser = asyncHandler(async (req, res) => {
       sameSite: "none",
     });
 
-    const { _id, name, email, password, phone, bio, photo, isVerified } = user;
+    const { _id, name, email, password, phone, bio, photo,role, isVerified } = user;
 
     res.status(200).json({
       _id,
@@ -121,6 +124,7 @@ const loginUser = asyncHandler(async (req, res) => {
       phone,
       bio,
       photo,
+      role,
       isVerified,
       token,
     });
@@ -146,6 +150,7 @@ const logoutUser  = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "Logged out successfully" });
 });
 
+//? Get user
 const  getUser= asyncHandler(async (req, res) => {
  const user = await User.findById(req.user._id)
  //? This is becuase we are getting the value of user as req.user in p[rotect middleware]
@@ -192,12 +197,81 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 });
 
+//? Delete user
+const deleteUser  = asyncHandler(async (req, res) => {
+  const user = User.findById(req.params.id) 
+  //? Jo bhi url me diya ho wo h params me aata h
+
+  if(!user){
+    res.status(404)
+    throw new Error("User not found")
+  }
+
+  await user.deleteOne()
+  res.status(200).json({message: " User deleted successfully"})
+});
+
+//? Get all users
+const getUsers = asyncHandler(async (req, res) => {
+  const users = await User.find().sort("createdAt").select("-password")
+
+  if(!users){
+    res.status(404)
+    throw new Error("No users found")
+  } else{
+    res.status(200).json(users)
+  
+  }
+});
+
+const loginStatus = asyncHandler(async (req, res) => {
+const token = req.cookies.token
+
+if(!token){
+  res.json(false)
+}
+
+//?Verify Token
+const verified = jwt.verify(token, process.env.JWT_SECRET)
+
+if(verified){
+  res.json(true)
+}
+res.json(false)
+});
+
+const upgradeUser = asyncHandler(async (req, res) => {
+  const {role, id} = req.body
+
+  const user = await User.findById(id)
+
+  if(!user){
+    res.status(404)
+    throw new Error("User not found")  
+  }
+else{
+  user.role = role 
+  await user.save()
+
+  res.status(200).json({message: `User upgraded to ${role}`})
+}
+});
+
+const sendAutomatedEmail = asyncHandler(async (req, res) => {
+ const {}= req.body 
+});
+
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
   getUser,
-  updateUser
+  updateUser,
+  deleteUser,
+  getUsers,
+  loginStatus,
+  upgradeUser,
+  sendAutomatedEmail
 };
 
 //? Check register through --> body--> url-encoded

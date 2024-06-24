@@ -1,14 +1,33 @@
 const express = require("express");
-const { registerUser, loginUser, logoutUser, getUser, updateUser } = require("../controllers/userController");
-const protect = require("../middleware/authMiddleware");
-const router = express.Router()
+const {
+  registerUser,
+  loginUser,
+  logoutUser,
+  getUser,
+  updateUser,
+  upgradeUser,
+  deleteUser,
+  getUsers,
+  loginStatus,
+  sendAutomatedEmail
+} = require("../controllers/userController");
+const {
+  protect,
+  adminOnly,
+  authorOnly,
+} = require("../middleware/authMiddleware");
+const router = express.Router();
 
-router.post("/register", registerUser)
-router.post("/login", loginUser)
-router.get("/logout", logoutUser)
-router.get("/getUser", protect ,getUser)
-router.patch("/updateUser", protect ,updateUser)
+router.post("/register", registerUser);
+router.post("/login", loginUser);
+router.get("/logout", logoutUser);
+router.get("/getUser", protect, getUser);
+router.patch("/updateUser", protect, updateUser);
 
-router.delete("/:id", protect ,deleteUser)
+router.delete("/:id", protect, adminOnly, deleteUser);
+router.get("/getUsers", protect, authorOnly, getUsers);
+router.get("/loginStatus", loginStatus);
+router.post("/upgradeUser", protect, adminOnly, upgradeUser);
+router.post("/sendAutomatedEmail", protect,  sendAutomatedEmail);
 
-module.exports = router
+module.exports = router;
