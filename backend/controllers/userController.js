@@ -91,7 +91,6 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new Error("User not found. Please sign up");
   }
 
-
   //?Check if the password matches
   const passwordIsCorrect = await bcrypt.compare(password, user.password);
 
@@ -114,7 +113,8 @@ const loginUser = asyncHandler(async (req, res) => {
       sameSite: "none",
     });
 
-    const { _id, name, email, password, phone, bio, photo,role, isVerified } = user;
+    const { _id, name, email, password, phone, bio, photo, role, isVerified } =
+      user;
 
     res.status(200).json({
       _id,
@@ -134,10 +134,9 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-
 //? Logout
 
-const logoutUser  = asyncHandler(async (req, res) => {
+const logoutUser = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
     path: "/",
     httpOnly: true,
@@ -151,33 +150,31 @@ const logoutUser  = asyncHandler(async (req, res) => {
 });
 
 //? Get user
-const  getUser= asyncHandler(async (req, res) => {
- const user = await User.findById(req.user._id)
- //? This is becuase we are getting the value of user as req.user in p[rotect middleware]
+const getUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+  //? This is becuase we are getting the value of user as req.user in p[rotect middleware]
 
- if(user){
-  // const { _id, name, email, password, phone, bio, photo, isVerified } = user;
-  res.status(200).json(user);
- } else{
-    res.status(404)
-    throw new Error("User not found")
- }
-  
+  if (user) {
+    // const { _id, name, email, password, phone, bio, photo, isVerified } = user;
+    res.status(200).json(user);
+  } else {
+    res.status(404);
+    throw new Error("User not found");
+  }
 });
-
 
 //? Update user
 const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
   if (user) {
-    const { email, name, phone, bio, photo} = user;
+    const { email, name, phone, bio, photo } = user;
     user.email = email;
     user.name = req.body.name || name;
     user.phone = req.body.phone || phone;
     user.bio = req.body.bio || bio;
     user.photo = req.body.photo || photo;
 
-    const updatedUser = await user.save() 
+    const updatedUser = await user.save();
 
     res.status(200).json({
       _id: updatedUser._id,
@@ -190,76 +187,76 @@ const updateUser = asyncHandler(async (req, res) => {
       isVerified: updatedUser.isVerified,
       token: updatedUser.token,
     });
-
-  }else{
-    res.status(404)
-    throw new Error("User not found")
+  } else {
+    res.status(404);
+    throw new Error("User not found");
   }
 });
 
 //? Delete user
-const deleteUser  = asyncHandler(async (req, res) => {
-  const user = User.findById(req.params.id) 
+const deleteUser = asyncHandler(async (req, res) => {
+  const user = User.findById(req.params.id);
   //? Jo bhi url me diya ho wo h params me aata h
 
-  if(!user){
-    res.status(404)
-    throw new Error("User not found")
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
   }
 
-  await user.deleteOne()
-  res.status(200).json({message: " User deleted successfully"})
+  await user.deleteOne();
+  res.status(200).json({ message: " User deleted successfully" });
 });
 
 //? Get all users
 const getUsers = asyncHandler(async (req, res) => {
-  const users = await User.find().sort("createdAt").select("-password")
+  const users = await User.find().sort("createdAt").select("-password");
 
-  if(!users){
-    res.status(404)
-    throw new Error("No users found")
-  } else{
-    res.status(200).json(users)
-  
+  if (!users) {
+    res.status(404);
+    throw new Error("No users found");
+  } else {
+    res.status(200).json(users);
   }
 });
 
 const loginStatus = asyncHandler(async (req, res) => {
-const token = req.cookies.token
+  const token = req.cookies.token;
 
-if(!token){
-  res.json(false)
-}
+  if (!token) {
+    res.json(false);
+  }
 
-//?Verify Token
-const verified = jwt.verify(token, process.env.JWT_SECRET)
+  //?Verify Token
+  const verified = jwt.verify(token, process.env.JWT_SECRET);
 
-if(verified){
-  res.json(true)
-}
-res.json(false)
+  if (verified) {
+    res.json(true);
+  }
+  res.json(false);
 });
 
 const upgradeUser = asyncHandler(async (req, res) => {
-  const {role, id} = req.body
+  const { role, id } = req.body;
 
-  const user = await User.findById(id)
+  const user = await User.findById(id);
 
-  if(!user){
-    res.status(404)
-    throw new Error("User not found")  
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  } else {
+    user.role = role;
+    await user.save();
+
+    res.status(200).json({ message: `User upgraded to ${role}` });
   }
-else{
-  user.role = role 
-  await user.save()
-
-  res.status(200).json({message: `User upgraded to ${role}`})
-}
 });
 
+//?Send Automated Email
 const sendAutomatedEmail = asyncHandler(async (req, res) => {
- const {}= req.body 
+  const { subject, sent_to, sent_from, reply_to, template } = req.body;
 });
+
+//?
 
 module.exports = {
   registerUser,
@@ -271,7 +268,7 @@ module.exports = {
   getUsers,
   loginStatus,
   upgradeUser,
-  sendAutomatedEmail
+  sendAutomatedEmail,
 };
 
 //? Check register through --> body--> url-encoded
