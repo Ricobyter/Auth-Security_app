@@ -6,6 +6,8 @@ const { generateToken } = require("../utils");
 var parser = require("ua-parser-js");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
+const Token = require("../models/tokenModel");
+const crypto = require("crypto")
 
 //? Register
 const registerUser = asyncHandler(async (req, res) => {
@@ -74,6 +76,34 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("error regestering user");
   }
 });
+
+//?Send Verification Email
+const sendVerificationEmail = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id)
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  } 
+
+  if(user.isVerified){
+    res.status(404);
+    throw new Error("User is already verified");
+  }
+
+  let token = await Token.findOne({userId : user._id});
+
+  if(token){
+    await token.deleteOne()
+  }
+
+    //? Create verification token and save
+const verificationToken = crypto.randomBytes(32).toString("hex") + user._id;
+
+//? Hash token and save
+})
+
+
+
 
 //? Login
 const loginUser = asyncHandler(async (req, res) => {
@@ -287,11 +317,8 @@ const sendAutomatedEmail = asyncHandler(async (req, res) => {
     res.status(500);
     throw new Error("An error occured while sending the email");
   }
-
-
 });
 
-//?
 
 module.exports = {
   registerUser,
@@ -304,6 +331,7 @@ module.exports = {
   loginStatus,
   upgradeUser,
   sendAutomatedEmail,
+  sendVerificationEmail
 };
 
 //? Check register through --> body--> url-encoded
