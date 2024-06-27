@@ -2,7 +2,7 @@ const User = require("../models/userModel");
 const asyncHandler = require("express-async-handler");
 //* express-async-handler --> Simple middleware for handling exceptions inside of async express routes and passing them to your express error handlers
 const bcrypt = require("bcryptjs");
-const { generateToken } = require("../utils");
+const { generateToken, hashToken } = require("../utils");
 var parser = require("ua-parser-js");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
@@ -98,8 +98,46 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
 
     //? Create verification token and save
 const verificationToken = crypto.randomBytes(32).toString("hex") + user._id;
+console.log(verificationToken)
 
 //? Hash token and save
+const hashedToken = hashToken(verificationToken)
+
+await new Token({
+  userId: user._id,
+  vToken: hashToken,
+  createdAt: Date.now(),
+  expiresAt: Date.now() + 60 * (60*1000), //? 60 minutes
+}).save()
+
+
+//? Construct Verfication URL
+const verificationUrl = `${process.env.FRONTEND_URL}/verify/${verificationToken}`
+
+//? Send email
+const subject = "Verify your account - Auth-App"
+const sent_to = user.email
+const sent_from = process.env.EMAIL_USER
+const reply_to = "noreply@rico.com"
+const template = "verifyEmail"
+const name = user.name
+const link = verificationUrl
+
+try {
+  await sendEmail(
+    subject,
+    sent_to,
+    sent_from,
+    reply_to,
+    template,
+    name,
+    link
+  )
+  res.status(200).json({message: "Email sent"})
+} catch (error) {
+  res.status(500);
+  throw new Error("An error occured while sending the email");
+}
 })
 
 
