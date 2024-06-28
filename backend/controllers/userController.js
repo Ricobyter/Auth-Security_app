@@ -383,6 +383,98 @@ const sendAutomatedEmail = asyncHandler(async (req, res) => {
   }
 });
 
+
+//? Forgot Password
+const forgotPassword = asyncHandler(async (req, res) => {
+  const {email} = req.body
+
+  const user = await User.findOne({email})
+
+  if(!user){
+    res.status(404)
+    throw new Error("User not found")
+  }
+
+  let token = await Token.findOne({ userId: user._id });
+
+  if (token) {
+    await token.deleteOne();
+  }
+
+  //? Create verification token and save
+  const resetToken = crypto.randomBytes(32).toString("hex") + user._id;
+  console.log(resetToken);
+
+  //? Hash token and save
+  const hashedToken = hashToken(resetToken);
+
+  await new Token({
+    userId: user._id,
+    rToken: hashedToken,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 60 * (60 * 1000),  //? 60 minutes
+  }).save();
+
+  //? Construct Reset URL
+  const resetUrl = `${process.env.FRONTEND_URL}/resetPassword/${resetToken}`;
+
+  //? Send email
+  const subject = "Password Reset Request - Auth-App";
+  const sent_to = user.email;
+  const sent_from = process.env.EMAIL_USER;
+  const reply_to = "noreply@rico.com";
+  const template = "forgotPassword";
+  const name = user.name;
+  const link = resetUrl;
+
+  try {
+    await sendEmail(
+      subject,
+      sent_to,
+      sent_from,
+      reply_to,
+      template,
+      name,
+      link
+    );
+    res.status(200).json({ message: "Reset Password Email sent" });
+  } catch (error) {
+    res.status(500);
+    throw new Error("An error occured while sending the email");
+  }
+});
+
+const resetPassword = asyncHandler(async (req, res) => {
+  const {resetToken} = req.params
+  const { password} = req.body;
+
+  const hashedToken = hashToken(resetToken);
+
+  const userToken = await Token.findOne({
+    rToken: hashedToken,
+    expiresAt: { $gt: Date.now() },
+  });
+
+  if (!userToken) {
+    res.status(404)
+    throw new Error("Invalid or expired verification token" );
+  }
+
+  const user = await User.findOne({ _id: userToken.userId });
+
+  //? Now Reset User Password
+  user.password = password
+  await user.save();
+
+  res.status(200).json({message: "Password Reset Was sucessful. Please Login again"})
+
+
+});
+
+const changePassword = asyncHandler(async (req, res) => {
+  res.send("Change Password")
+});
+
 module.exports = {
   registerUser,
   loginUser,
@@ -396,6 +488,9 @@ module.exports = {
   sendAutomatedEmail,
   sendVerificationEmail,
   verifyUser,
+  forgotPassword,
+  resetPassword,
+  changePassword
 };
 
 //? Check register through --> body--> url-encoded
