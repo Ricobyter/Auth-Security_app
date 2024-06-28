@@ -10,7 +10,8 @@ const {
   getUsers,
   loginStatus,
   sendAutomatedEmail,
-  sendVerificationEmail
+  sendVerificationEmail,
+  verifyUser
 } = require("../controllers/userController");
 const {
   protect,
@@ -32,5 +33,6 @@ router.post("/upgradeUser", protect, adminOnly, upgradeUser);
 router.post("/sendAutomatedEmail", protect,  sendAutomatedEmail);
 
 router.post("/sendVerificationEmail", protect,  sendVerificationEmail);
+router.patch("/verifyUser/:verificationToken",  verifyUser);
 
 module.exports = router;

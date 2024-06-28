@@ -7,7 +7,7 @@ var parser = require("ua-parser-js");
 const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
 const Token = require("../models/tokenModel");
-const crypto = require("crypto")
+const crypto = require("crypto");
 
 //? Register
 const registerUser = asyncHandler(async (req, res) => {
@@ -79,69 +79,65 @@ const registerUser = asyncHandler(async (req, res) => {
 
 //?Send Verification Email
 const sendVerificationEmail = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id)
+  const user = await User.findById(req.user._id);
   if (!user) {
     res.status(404);
     throw new Error("User not found");
-  } 
+  }
 
-  if(user.isVerified){
+  if (user.isVerified) {
     res.status(404);
     throw new Error("User is already verified");
   }
 
-  let token = await Token.findOne({userId : user._id});
+  let token = await Token.findOne({ userId: user._id });
 
-  if(token){
-    await token.deleteOne()
+  if (token) {
+    await token.deleteOne();
   }
 
-    //? Create verification token and save
-const verificationToken = crypto.randomBytes(32).toString("hex") + user._id;
-console.log(verificationToken)
+  //? Create verification token and save
+  const verificationToken = crypto.randomBytes(32).toString("hex") + user._id;
+  console.log(verificationToken);
 
-//? Hash token and save
-const hashedToken = hashToken(verificationToken)
+  //? Hash token and save
+  const hashedToken = hashToken(verificationToken);
 
-await new Token({
-  userId: user._id,
-  vToken: hashToken,
-  createdAt: Date.now(),
-  expiresAt: Date.now() + 60 * (60*1000), //? 60 minutes
-}).save()
+  await new Token({
+    userId: user._id,
+    vToken: hashedToken,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 60 * (60 * 1000), //? 60 minutes
+  }).save();
 
+  //? Construct Verfication URL
+  const verificationUrl = `${process.env.FRONTEND_URL}/verify/${verificationToken}`;
 
-//? Construct Verfication URL
-const verificationUrl = `${process.env.FRONTEND_URL}/verify/${verificationToken}`
+  //? Send email
+  const subject = "Verify your account - Auth-App";
+  const sent_to = user.email;
+  const sent_from = process.env.EMAIL_USER;
+  const reply_to = "noreply@rico.com";
+  const template = "verifyEmail";
+  const name = user.name;
+  const link = verificationUrl;
 
-//? Send email
-const subject = "Verify your account - Auth-App"
-const sent_to = user.email
-const sent_from = process.env.EMAIL_USER
-const reply_to = "noreply@rico.com"
-const template = "verifyEmail"
-const name = user.name
-const link = verificationUrl
-
-try {
-  await sendEmail(
-    subject,
-    sent_to,
-    sent_from,
-    reply_to,
-    template,
-    name,
-    link
-  )
-  res.status(200).json({message: "Email sent"})
-} catch (error) {
-  res.status(500);
-  throw new Error("An error occured while sending the email");
-}
-})
-
-
-
+  try {
+    await sendEmail(
+      subject,
+      sent_to,
+      sent_from,
+      reply_to,
+      template,
+      name,
+      link
+    );
+    res.status(200).json({ message: "Verification Email sent" });
+  } catch (error) {
+    res.status(500);
+    throw new Error("An error occured while sending the email");
+  }
+});
 
 //? Login
 const loginUser = asyncHandler(async (req, res) => {
@@ -201,6 +197,35 @@ const loginUser = asyncHandler(async (req, res) => {
     res.status(500);
     throw new Error("Something went wrong. Try again later");
   }
+});
+
+const verifyUser = asyncHandler(async (req, res) => {
+  const { verificationToken } = req.params;
+
+  const hashedToken = hashToken(verificationToken);
+
+  const userToken = await Token.findOne({
+    vToken: hashedToken,
+    expiresAt: { $gt: Date.now() },
+  });
+
+  if (!userToken) {
+    res.status(404)
+    throw new Error("Invalid or expired verification token" );
+  }
+
+  const user = await User.findOne({ _id: userToken.userId });
+
+  if (user.isVerified) {
+    res.status(400)
+    throw new Error("User is already verified")
+  }
+
+  //? Now verify User
+  user.isVerified = true;
+  await user.save();
+
+  res.status(200).json({message: "Account verified"})
 });
 
 //? Logout
@@ -304,6 +329,7 @@ const loginStatus = asyncHandler(async (req, res) => {
   res.json(false);
 });
 
+//?Upgrade User
 const upgradeUser = asyncHandler(async (req, res) => {
   const { role, id } = req.body;
 
@@ -322,14 +348,14 @@ const upgradeUser = asyncHandler(async (req, res) => {
 
 //?Send Automated Email
 const sendAutomatedEmail = asyncHandler(async (req, res) => {
-  const { subject, sent_to,  reply_to, template, url } = req.body;
+  const { subject, sent_to, reply_to, template, url } = req.body;
 
-  if(!subject || !sent_to || !reply_to || !template){
-    res.status(400)
-    throw new Error("Missing email parameter")
+  if (!subject || !sent_to || !reply_to || !template) {
+    res.status(400);
+    throw new Error("Missing email parameter");
   }
 
-  const user = await User.findOne({email: sent_to});
+  const user = await User.findOne({ email: sent_to });
 
   if (!user) {
     res.status(404);
@@ -337,8 +363,8 @@ const sendAutomatedEmail = asyncHandler(async (req, res) => {
   }
 
   const sent_from = process.env.EMAIL_USER;
-  const name = user.name
-  const link = `${process.env.FRONTEND_URL}${url}`
+  const name = user.name;
+  const link = `${process.env.FRONTEND_URL}${url}`;
 
   try {
     await sendEmail(
@@ -349,14 +375,13 @@ const sendAutomatedEmail = asyncHandler(async (req, res) => {
       template,
       name,
       link
-    )
-    res.status(200).json({message: "Email sent"})
+    );
+    res.status(200).json({ message: "Email sent" });
   } catch (error) {
     res.status(500);
     throw new Error("An error occured while sending the email");
   }
 });
-
 
 module.exports = {
   registerUser,
@@ -369,7 +394,8 @@ module.exports = {
   loginStatus,
   upgradeUser,
   sendAutomatedEmail,
-  sendVerificationEmail
+  sendVerificationEmail,
+  verifyUser,
 };
 
 //? Check register through --> body--> url-encoded
