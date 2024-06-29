@@ -14,7 +14,8 @@ const {
   verifyUser,
   forgotPassword,
   resetPassword,
-  changePassword
+  changePassword,
+  sendLoginCode
 } = require("../controllers/userController");
 const {
   protect,
@@ -40,5 +41,7 @@ router.patch("/verifyUser/:verificationToken",  verifyUser);
 router.post("/forgotPassword",  forgotPassword);
 router.patch("/resetPassword/:resetToken",  resetPassword);
 router.patch("/changePassword", protect, changePassword);
+
+router.post("/sendLoginCode/:email", sendLoginCode);
 
 module.exports = router;

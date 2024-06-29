@@ -8,6 +8,9 @@ const jwt = require("jsonwebtoken");
 const sendEmail = require("../utils/sendEmail");
 const Token = require("../models/tokenModel");
 const crypto = require("crypto");
+const Cryptr = require("cryptr");
+
+const cryptr = new Cryptr(process.env.CRYPTR_KEY);
 
 //? Register
 const registerUser = asyncHandler(async (req, res) => {
@@ -165,6 +168,38 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   //* Getting user agent and triggering 2FA for unknown user agents
+  const ua = parser(req.headers["user-agent"]);
+  const thisUserAgent = [ua.ua];
+  console.log(thisUserAgent);
+  const allowedAgent = user.userAgent.includes(thisUserAgent);
+
+  if (!allowedAgent) {
+    //* Trigger2FA
+
+    //? Generate six digit code
+    const loginCode = Math.floor(100000 + Math.random() * 900000);
+    console.log(loginCode)
+
+    //? Encrypt code before saving
+    const encryptedLoginCode = cryptr.encrypt(loginCode.toString());
+
+    let userToken = await Token.findOne({ userId: user._id });
+
+    if (userToken) {
+      await userToken.deleteOne();
+    }
+
+    //? Save Token to db
+    await new Token({
+      userId: user._id,
+      lToken: encryptedLoginCode,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 60 * (60 * 1000), //? 60 minutes
+    }).save();
+
+    res.status(200)
+    throw new Error("Check your email inbox for login code.")
+  }
 
   const token = generateToken(user._id);
 
@@ -199,6 +234,12 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
+//?Send Login Code
+const sendLoginCode = asyncHandler(async (req, res) => {
+  res.send("Send login code")
+});
+
+//? Verify User
 const verifyUser = asyncHandler(async (req, res) => {
   const { verificationToken } = req.params;
 
@@ -210,26 +251,25 @@ const verifyUser = asyncHandler(async (req, res) => {
   });
 
   if (!userToken) {
-    res.status(404)
-    throw new Error("Invalid or expired verification token" );
+    res.status(404);
+    throw new Error("Invalid or expired verification token");
   }
 
   const user = await User.findOne({ _id: userToken.userId });
 
   if (user.isVerified) {
-    res.status(400)
-    throw new Error("User is already verified")
+    res.status(400);
+    throw new Error("User is already verified");
   }
 
   //? Now verify User
   user.isVerified = true;
   await user.save();
 
-  res.status(200).json({message: "Account verified"})
+  res.status(200).json({ message: "Account verified" });
 });
 
 //? Logout
-
 const logoutUser = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
     path: "/",
@@ -383,16 +423,15 @@ const sendAutomatedEmail = asyncHandler(async (req, res) => {
   }
 });
 
-
 //? Forgot Password
 const forgotPassword = asyncHandler(async (req, res) => {
-  const {email} = req.body
+  const { email } = req.body;
 
-  const user = await User.findOne({email})
+  const user = await User.findOne({ email });
 
-  if(!user){
-    res.status(404)
-    throw new Error("User not found")
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
   }
 
   let token = await Token.findOne({ userId: user._id });
@@ -412,7 +451,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     userId: user._id,
     rToken: hashedToken,
     createdAt: Date.now(),
-    expiresAt: Date.now() + 60 * (60 * 1000),  //? 60 minutes
+    expiresAt: Date.now() + 60 * (60 * 1000), //? 60 minutes
   }).save();
 
   //? Construct Reset URL
@@ -444,9 +483,10 @@ const forgotPassword = asyncHandler(async (req, res) => {
   }
 });
 
+//? Reset Password
 const resetPassword = asyncHandler(async (req, res) => {
-  const {resetToken} = req.params
-  const { password} = req.body;
+  const { resetToken } = req.params;
+  const { password } = req.body;
 
   const hashedToken = hashToken(resetToken);
 
@@ -456,23 +496,51 @@ const resetPassword = asyncHandler(async (req, res) => {
   });
 
   if (!userToken) {
-    res.status(404)
-    throw new Error("Invalid or expired verification token" );
+    res.status(404);
+    throw new Error("Invalid or expired verification token");
   }
 
   const user = await User.findOne({ _id: userToken.userId });
 
   //? Now Reset User Password
-  user.password = password
+  user.password = password;
   await user.save();
 
-  res.status(200).json({message: "Password Reset Was sucessful. Please Login again"})
-
-
+  res
+    .status(200)
+    .json({ message: "Password Reset Was sucessful. Please Login again" });
 });
 
+//? Change Password
 const changePassword = asyncHandler(async (req, res) => {
-  res.send("Change Password")
+  const { oldPassword, password } = req.body;
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  if (!oldPassword || !password) {
+    res.status(400);
+    throw new Error("Please enter old and new password");
+  }
+
+  // Check if old password is correct
+  const passwordIsCorrect = await bcrypt.compare(oldPassword, user.password);
+
+  // Save new password
+  if (user && passwordIsCorrect) {
+    user.password = password;
+    await user.save();
+
+    res
+      .status(200)
+      .json({ message: "Password change successful, please re-login" });
+  } else {
+    res.status(400);
+    throw new Error("Old password is incorrect");
+  }
 });
 
 module.exports = {
@@ -490,7 +558,8 @@ module.exports = {
   verifyUser,
   forgotPassword,
   resetPassword,
-  changePassword
+  changePassword,
+  sendLoginCode
 };
 
 //? Check register through --> body--> url-encoded
