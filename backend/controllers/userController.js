@@ -178,7 +178,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     //? Generate six digit code
     const loginCode = Math.floor(100000 + Math.random() * 900000);
-    console.log(loginCode)
+    console.log(loginCode);
 
     //? Encrypt code before saving
     const encryptedLoginCode = cryptr.encrypt(loginCode.toString());
@@ -197,8 +197,8 @@ const loginUser = asyncHandler(async (req, res) => {
       expiresAt: Date.now() + 60 * (60 * 1000), //? 60 minutes
     }).save();
 
-    res.status(200)
-    throw new Error("Check your email inbox for login code.")
+    res.status(200);
+    throw new Error("New Browser or device detected");
   }
 
   const token = generateToken(user._id);
@@ -236,25 +236,25 @@ const loginUser = asyncHandler(async (req, res) => {
 
 //?Send Login Code
 const sendLoginCode = asyncHandler(async (req, res) => {
-  const {email} = req.params
-  const user = await User.findOne({email})
-  if(!user) {
-    res.status(404)
-    throw new Error("User not found")
+  const { email } = req.params;
+  const user = await User.findOne({ email });
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
   }
 
   //?Find User LToken
   let userToken = await Token.findOne({
     userId: user._id,
     expiresAt: { $gt: Date.now() },
-  })
+  });
 
-  if(!userToken){
-    res.status(404)
-    throw new Error("Invalid or expired token")
+  if (!userToken) {
+    res.status(404);
+    throw new Error("Invalid or expired token");
   }
 
-  const loginCode = userToken.lToken
+  const loginCode = userToken.lToken;
   const decryptedLoginCode = cryptr.decrypt(loginCode);
 
   //? Send Login Code
@@ -281,7 +281,68 @@ const sendLoginCode = asyncHandler(async (req, res) => {
     res.status(500);
     throw new Error("An error occured while sending the email");
   }
+});
 
+const loginWithCode = asyncHandler(async (req, res) => {
+  const { email } = req.params;
+  const { loginCode } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  // Find user Login Token
+  const userToken = await Token.findOne({
+    userId: user.id,
+    expiresAt: { $gt: Date.now() },
+  });
+
+  if (!userToken) {
+    res.status(404);
+    throw new Error("Invalid or Expired Token, please login again");
+  }
+
+  const decryptedLoginCode = cryptr.decrypt(userToken.lToken);
+
+  if (loginCode !== decryptedLoginCode) {
+    res.status(400);
+    throw new Error("Incorrect login code, please try again");
+  } else {
+    // Register userAgent
+    const ua = parser(req.headers["user-agent"]);
+    const thisUserAgent = ua.ua;
+    user.userAgent.push(thisUserAgent);
+    await user.save();
+
+    // Generate Token
+    const token = generateToken(user._id);
+
+    // Send HTTP-only cookie
+    res.cookie("token", token, {
+      path: "/",
+      httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 86400), // 1 day
+      sameSite: "none",
+      secure: true,
+    });
+
+    const { _id, name, email, phone, bio, photo, role, isVerified } = user;
+
+    res.status(200).json({
+      _id,
+      name,
+      email,
+      phone,
+      bio,
+      photo,
+      role,
+      isVerified,
+      token,
+    });
+  }
 });
 
 //? Verify User
@@ -604,7 +665,8 @@ module.exports = {
   forgotPassword,
   resetPassword,
   changePassword,
-  sendLoginCode
+  sendLoginCode,
+  loginWithCode,
 };
 
 //? Check register through --> body--> url-encoded
