@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
 import { FaTimes } from "react-icons/fa";
 import { BsCheck2All } from "react-icons/bs";
+import { toast } from "react-toastify";
 
 const initialState = {
   name: "",
@@ -65,7 +66,18 @@ useEffect(() => {
   }
 }, [password]);
 
-  const loginUser = () => {};
+  const registerUser = (e) => {
+    e.preventDefault();
+    
+   if(!name || !password || !email ||!password2){
+    toast.error("Please fill all the fields")
+   }
+
+   if(password.length < 6){
+    toast.error("Password must be at least 6 characters")
+   }
+
+  };
   return (
     <div className={`container ${styles.auth}`}>
       <Card>
@@ -74,7 +86,7 @@ useEffect(() => {
           <TiUserAddOutline size={35} color="#999" />
           </div>
           <h2>Register</h2>
-          <form onSubmit={loginUser}>
+          <form onSubmit={registerUser}>
             <input
               type="text"
               required
@@ -102,6 +114,12 @@ useEffect(() => {
               name="password2"
               value={password2}
               onChange={handleInputChange}
+              onPaste={(e) => {
+                e.preventDefault();
+                toast.error("Cannot paste into input field")
+
+                return false
+              }}
             />
             {/* Pasword Strength */}
             <Card cardClass={styles.group}>
