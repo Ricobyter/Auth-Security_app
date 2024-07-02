@@ -21,7 +21,7 @@ app.use(cookieParser())
 app.use(bodyParser.json())
 app.use(
     cors({
-        origin: ["http://localhost:3000", "https://auth-app.vercel.app"],
+        origin: true,
         // origin: true,
         credentials: true,
     })

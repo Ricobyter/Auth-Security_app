@@ -3,15 +3,24 @@ import "./Header.scss";
 import { IoMdLogIn } from "react-icons/io";
 import { FaUserCircle } from "react-icons/fa";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { logout, RESET } from "../../redux/features/auth/authSlice";
 
 
 const activeLink = ({isActive}) => (isActive ? 'active' : '')
 
 const Header = () => {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   const goHome = () => {
     navigate('/')
+  }
+
+  const logoutUser = async () => {
+    dispatch(RESET());
+    await dispatch(logout())
+    navigate('/login')
   }
   return (
     <div className="header ">
@@ -36,7 +45,7 @@ const Header = () => {
             </NavLink>
           </li>
           <li>
-            <button className="--btn --btn-secondary">Logout</button>
+            <button onClick={logoutUser} className="--btn --btn-secondary">Logout</button>
           </li>
         </ul>
       </nav>

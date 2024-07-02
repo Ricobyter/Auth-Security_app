@@ -146,20 +146,19 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  //?Validation
+  //   Validation
   if (!email || !password) {
     res.status(400);
-    throw new Error("Please fill all the fields");
+    throw new Error("Please add email and password");
   }
 
   const user = await User.findOne({ email });
 
   if (!user) {
-    res.status(400);
-    throw new Error("User not found. Please sign up");
+    res.status(404);
+    throw new Error("User not found, please signup");
   }
 
-  //?Check if the password matches
   const passwordIsCorrect = await bcrypt.compare(password, user.password);
 
   if (!passwordIsCorrect) {
@@ -167,60 +166,57 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new Error("Invalid email or password");
   }
 
-  //* Getting user agent and triggering 2FA for unknown user agents
+  // Trgger 2FA for unknow UserAgent
   const ua = parser(req.headers["user-agent"]);
-  const thisUserAgent = [ua.ua];
+  const thisUserAgent = ua.ua;
   console.log(thisUserAgent);
   const allowedAgent = user.userAgent.includes(thisUserAgent);
 
   if (!allowedAgent) {
-    //* Trigger2FA
-
-    //? Generate six digit code
+    // Genrate 6 digit code
     const loginCode = Math.floor(100000 + Math.random() * 900000);
     console.log(loginCode);
 
-    //? Encrypt code before saving
+    // Encrypt login code before saving to DB
     const encryptedLoginCode = cryptr.encrypt(loginCode.toString());
 
+    // Delete Token if it exists in DB
     let userToken = await Token.findOne({ userId: user._id });
-
     if (userToken) {
       await userToken.deleteOne();
     }
 
-    //? Save Token to db
+    // Save Tokrn to DB
     await new Token({
       userId: user._id,
       lToken: encryptedLoginCode,
       createdAt: Date.now(),
-      expiresAt: Date.now() + 60 * (60 * 1000), //? 60 minutes
+      expiresAt: Date.now() + 60 * (60 * 1000), // 60mins
     }).save();
 
-    res.status(200);
-    throw new Error("New Browser or device detected");
+    res.status(400);
+    throw new Error("New browser or device detected");
   }
 
+  // Generate Token
   const token = generateToken(user._id);
 
   if (user && passwordIsCorrect) {
-    //? Send http only cookie
+    // Send HTTP-only cookie
     res.cookie("token", token, {
       path: "/",
       httpOnly: true,
-      expires: new Date(Date.now() + 1000 * 86400), //* One day
-      secure: true,
+      expires: new Date(Date.now() + 1000 * 86400), // 1 day
       sameSite: "none",
+      secure: true,
     });
 
-    const { _id, name, email, password, phone, bio, photo, role, isVerified } =
-      user;
+    const { _id, name, email, phone, bio, photo, role, isVerified } = user;
 
     res.status(200).json({
       _id,
       name,
       email,
-      password,
       phone,
       bio,
       photo,
@@ -230,7 +226,7 @@ const loginUser = asyncHandler(async (req, res) => {
     });
   } else {
     res.status(500);
-    throw new Error("Something went wrong. Try again later");
+    throw new Error("Something went wrong, please try again");
   }
 });
 
@@ -670,3 +666,5 @@ module.exports = {
 };
 
 //? Check register through --> body--> url-encoded
+
+

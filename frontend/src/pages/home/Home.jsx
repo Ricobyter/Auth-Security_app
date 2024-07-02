@@ -1,6 +1,7 @@
 import React from 'react'
 import './Home.scss'
 import LoginImg from '../../assets/login.svg'
+import { Link } from 'react-router-dom'
 
 export default function Home() {
   return (
@@ -15,10 +16,14 @@ export default function Home() {
           <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Porro a sunt perferendis distinctio, sed eos aliquid harum fuga id error!</p>
           <div className="hero-buttons --flex-start">
             <button className="--btn --btn-danger">
+              <Link to = '/register'>
               Register
+              </Link>
             </button>
             <button className="--btn --btn-primary">
+              <Link to='/login'>
               Login
+              </Link>
             </button>
 
           </div>

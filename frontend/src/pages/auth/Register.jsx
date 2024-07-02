@@ -2,11 +2,15 @@ import React, { useEffect, useState } from "react";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import { TiUserAddOutline } from "react-icons/ti";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
 import { FaTimes } from "react-icons/fa";
 import { BsCheck2All } from "react-icons/bs";
 import { toast } from "react-toastify";
+import { validateEmail } from "../../redux/features/auth/authService";
+import {useDispatch, useSelector} from 'react-redux'
+import { register, RESET } from "../../redux/features/auth/authSlice";
+import Loader from "../../components/loader/Loader";
 
 const initialState = {
   name: "",
@@ -18,10 +22,18 @@ export default function Register() {
   const [formData, setFormData] = useState(initialState);
 
   const {name, email, password, password2} = formData
+
   const handleInputChange = (e) => {
   const {name, value} = e.target 
   setFormData({...formData, [name]: value})
   };
+
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+
+  const {isLoading, isLoggedIn, isSuccess, message} = useSelector((state)=> 
+state.auth    
+  )
 
   const[upperCase, setUpperCase] = useState(false)
   const[num, setNum] = useState(false)
@@ -66,20 +78,45 @@ useEffect(() => {
   }
 }, [password]);
 
-  const registerUser = (e) => {
+  const registerUser = async(e) => {
     e.preventDefault();
     
-   if(!name || !password || !email ||!password2){
-    toast.error("Please fill all the fields")
+   if(!name || !password || !email){
+    return toast.error("Please fill all the fields")
    }
 
    if(password.length < 6){
-    toast.error("Password must be at least 6 characters")
+    return toast.error("Password must be at least 6 characters")
    }
 
+   if(!validateEmail(email)){
+    return toast.error("Invalid Email")
+   }
+
+   if(password !== password2){
+    return toast.error("Passwords do not match")
+   }
+
+
+   const userData = {
+    name,email, password
+   }
+
+  //  console.log(userData)
+  await dispatch(register(userData))
   };
+
+  useEffect(()=> {
+if(isSuccess && isLoggedIn){
+  navigate('/profile')
+}
+
+dispatch(RESET())
+  }, [isLoggedIn, isSuccess, dispatch, navigate])
+
   return (
     <div className={`container ${styles.auth}`}>
+    {isLoading && <Loader />}
       <Card>
         <div className={styles.form}>
           <div className="--flex-center">
