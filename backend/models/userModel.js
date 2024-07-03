@@ -25,7 +25,7 @@ const userSchema = mongoose.Schema(
     photo: {
         type: String,
         required: [true, "Please add a photo"],
-        default: "https://github.com/zinotrust/auth-app-styles/blob/master/assets/avatarr.png"
+        default: "https://i.ibb.co/4pDNDk1/avatar.png"
       },
     phone: {
         type: String,

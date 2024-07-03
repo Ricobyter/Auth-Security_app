@@ -87,6 +87,97 @@ export const getLoginStatus = createAsyncThunk(
     }
   );
   
+//Get User
+export const getUser = createAsyncThunk(
+    "auth/getUser",
+    async (_, thunkAPI) => {
+      try {
+        return await authService.getUser();
+      } catch (error) {
+        const message =
+          (error.response &&
+            error.response.data &&
+            error.response.data.message) ||
+          error.message ||
+          error.toString();
+        return thunkAPI.rejectWithValue(message);
+      }
+    }
+  );
+  
+  
+//Update User
+export const updateUser = createAsyncThunk(
+    "auth/updateUser",
+    async (userData, thunkAPI) => {
+      try {
+        return await authService.updateUser(userData);
+      } catch (error) {
+        const message =
+          (error.response &&
+            error.response.data &&
+            error.response.data.message) ||
+          error.message ||
+          error.toString();
+        return thunkAPI.rejectWithValue(message);
+      }
+    }
+  );
+  
+//Send Verification email
+export const sendVerificationEmail = createAsyncThunk(
+    "auth/sendVerificationEmail",
+    async (_, thunkAPI) => {
+      try {
+        return await authService.sendVerificationEmail();
+      } catch (error) {
+        const message =
+          (error.response &&
+            error.response.data &&
+            error.response.data.message) ||
+          error.message ||
+          error.toString();
+        return thunkAPI.rejectWithValue(message);
+      }
+    }
+  );
+  
+//Verify User
+export const verifyUser = createAsyncThunk(
+    "auth/verifyUser",
+    async (verificationToken, thunkAPI) => {
+      try {
+        return await authService.verifyUser(verificationToken);
+      } catch (error) {
+        const message =
+          (error.response &&
+            error.response.data &&
+            error.response.data.message) ||
+          error.message ||
+          error.toString();
+        return thunkAPI.rejectWithValue(message);
+      }
+    }
+  );
+  
+//Verify User
+export const changePassword = createAsyncThunk(
+    "auth/changePassword",
+    async (userData, thunkAPI) => {
+      try {
+        return await authService.changePassword(userData);
+      } catch (error) {
+        const message =
+          (error.response &&
+            error.response.data &&
+            error.response.data.message) ||
+          error.message ||
+          error.toString();
+        return thunkAPI.rejectWithValue(message);
+      }
+    }
+  );
+  
 
 const authSlice = createSlice({
     name: "auth",
@@ -180,6 +271,88 @@ const authSlice = createSlice({
             state.isError= true;
             state.message= action.payload;
         })
+
+        //Get User
+        .addCase(getUser.pending, (state,action)=>{
+            state.isLoading = true
+        })
+        .addCase(getUser.fulfilled, (state,action)=>{
+            state.isLoading = false
+            state.isSuccess= true;
+            state.isLoggedIn = true;
+            state.user= action.payload;
+        })
+        .addCase(getUser.rejected, (state,action)=>{
+            state.isLoading = false
+            state.isError= true;
+            state.message= action.payload;
+            toast.error(action.payload)
+        })
+        //Update User
+        .addCase(updateUser.pending, (state,action)=>{
+            state.isLoading = true
+        })
+        .addCase(updateUser.fulfilled, (state,action)=>{
+            state.isLoading = false
+            state.isSuccess= true;
+            state.isLoggedIn = true;
+            state.user= action.payload;
+            toast.success("Profile Updated Successfully")
+        })
+        .addCase(updateUser.rejected, (state,action)=>{
+            state.isLoading = false
+            state.isError= true;
+            state.message= action.payload;
+            toast.error(action.payload)
+        })
+        //Send Verification email
+        .addCase(sendVerificationEmail.pending, (state,action)=>{
+            state.isLoading = true
+        })
+        .addCase(sendVerificationEmail.fulfilled, (state,action)=>{
+            state.isLoading = false
+            state.isSuccess= true;
+            state.message = action.payload;
+            toast.success(action.payload)
+        })
+        .addCase(sendVerificationEmail.rejected, (state,action)=>{
+            state.isLoading = false
+            state.isError= true;
+            state.message= action.payload;
+            toast.error(action.payload)
+        })
+        //Verify User
+        .addCase(verifyUser.pending, (state,action)=>{
+            state.isLoading = true
+        })
+        .addCase(verifyUser.fulfilled, (state,action)=>{
+            state.isLoading = false
+            state.isSuccess= true;
+            state.message = action.payload;
+            toast.success(action.payload)
+        })
+        .addCase(verifyUser.rejected, (state,action)=>{
+            state.isLoading = false
+            state.isError= true;
+            state.message= action.payload;
+            toast.error(action.payload)
+        })
+        //Change Password
+        .addCase(changePassword.pending, (state,action)=>{
+            state.isLoading = true
+        })
+        .addCase(changePassword.fulfilled, (state,action)=>{
+            state.isLoading = false
+            state.isSuccess= true;
+            state.message = action.payload;
+            toast.success(action.payload)
+        })
+        .addCase(changePassword.rejected, (state,action)=>{
+            state.isLoading = false
+            state.isError= true;
+            state.message= action.payload;
+            toast.error(action.payload)
+        })
     }
 })
 
@@ -187,5 +360,6 @@ const authSlice = createSlice({
 export const {RESET} = authSlice.actions
 
 export const selectIsLoggedIn = (state) => state.auth.isLoggedIn
+export const selectUser = (state) => state.auth.user
 
 export default authSlice.reducer

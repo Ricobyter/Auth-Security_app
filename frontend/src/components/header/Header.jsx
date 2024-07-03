@@ -5,6 +5,9 @@ import { FaUserCircle } from "react-icons/fa";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout, RESET } from "../../redux/features/auth/authSlice";
+import { ShowOnLogout } from "../protect/hiddenLink";
+import { ShowOnLogin } from "../protect/hiddenLink";
+import { UserName } from "../../pages/profile/Profile";
 
 
 const activeLink = ({isActive}) => (isActive ? 'active' : '')
@@ -30,15 +33,23 @@ const Header = () => {
           <span>Auth-Help</span>
         </div>
         <ul className="home-links">
+
+          <ShowOnLogin>
           <li className="--flex-center">
             <FaUserCircle size={20} />
-            <p className="--color-white">Hi, Rico</p>
+            <UserName />
           </li>
+          </ShowOnLogin>
+
+          <ShowOnLogout>
           <li>
             <button className="--btn --btn-primary">
               <Link to="/login">Login</Link>
             </button>
           </li>
+          </ShowOnLogout>
+
+          <ShowOnLogin>
           <li>
             <NavLink className={activeLink} to="/profile">
               Profile
@@ -47,6 +58,7 @@ const Header = () => {
           <li>
             <button onClick={logoutUser} className="--btn --btn-secondary">Logout</button>
           </li>
+          </ShowOnLogin>
         </ul>
       </nav>
     </div>

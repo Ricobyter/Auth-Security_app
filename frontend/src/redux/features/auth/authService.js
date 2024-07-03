@@ -34,11 +34,46 @@ const getLoginStatus = async () => {
   return response.data;
 };
 
+//Get User Profile
+const getUser = async () => {
+  const response = await axios.get(API_URL + "getUser");
+  return response.data;
+};
+
+//Update User Profile
+const updateUser = async (userData) => {
+  const response = await axios.patch(API_URL + "updateUser", userData);
+  return response.data;
+};
+
+//Send Verification email
+const sendVerificationEmail = async () => {
+  const response = await axios.post(API_URL + "sendVerificationEmail");
+  return response.data.message;
+};
+
+//verify User
+const verifyUser = async (verificationToken) => {
+  const response = await axios.patch(`${API_URL}verifyUser/${verificationToken}`);
+  return response.data.message;
+};
+
+//Chnange Password
+const changePassword = async (userData) => {
+  const response = await axios.patch(API_URL + "changePassword" , userData);
+  return response.data.message;
+};
+
 const authService = {
     register,
     login,
     logout,
-    getLoginStatus
+    getLoginStatus,
+    getUser,
+    updateUser,
+    sendVerificationEmail,
+    verifyUser,
+    changePassword
 }
 
 export default authService
