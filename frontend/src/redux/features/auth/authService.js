@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL
-const API_URL = `${BACKEND_URL}/api/users/`
+export const API_URL = `${BACKEND_URL}/api/users/`
 
 // Validate email
 export const validateEmail = (email) => {
@@ -64,6 +64,18 @@ const changePassword = async (userData) => {
   return response.data.message;
 };
 
+//Forgot Password
+const forgotPassword = async (userData) => {
+  const response = await axios.post(API_URL + "forgotPassword" , userData);
+  return response.data.message;
+};
+
+//Reset Password
+const resetPassword = async (userData, resetToken) => {
+  const response = await axios.patch(`${API_URL}resetPassword/${resetToken}`, userData);
+  return response.data.message;
+};
+
 const authService = {
     register,
     login,
@@ -73,7 +85,9 @@ const authService = {
     updateUser,
     sendVerificationEmail,
     verifyUser,
-    changePassword
+    changePassword,
+    forgotPassword,
+    resetPassword
 }
 
 export default authService

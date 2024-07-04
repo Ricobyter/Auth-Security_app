@@ -4,9 +4,12 @@ import Card from "../../components/card/Card";
 import PageMenu from "../../components/pageMenu/PageMenu";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { changePassword, logout, RESET } from "../../redux/features/auth/authSlice";
+import useRedirectLoggedOutUser from "../../customHook/useRedirectLoggedOutUser";
+import { Spinner } from "../../components/loader/Loader";
+import { sendAutomatedEmail } from "../../redux/features/email/emailSlice";
 
 const initialState = {
   oldPassword: "",
@@ -16,6 +19,10 @@ const initialState = {
 
 export default function ChangePassword() {
   useRedirectLoggedOutUser("/login");
+
+  const { isLoading, user } = useSelector(
+    (state) => state.auth
+  );
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -30,7 +37,7 @@ export default function ChangePassword() {
   };
 
   const updatePassword = async(e) => {
-    e.preventDefault
+    e.preventDefault()
 
     if (!password || !oldPassword || !password2) {
       return toast.error("Please fill all the fields");
@@ -45,7 +52,17 @@ export default function ChangePassword() {
       password,
     }
 
+    const emailData ={
+      subject: "Password Changed - Auth-APP",
+      sent_to : user.email,
+      reply_to : "noreply@rico.com",
+      template: "changePassword",
+      url : "/forgot"
+
+    }
+
     await dispatch(changePassword(userData))
+    await dispatch(sendAutomatedEmail(emailData))
     await dispatch(logout())
     await dispatch(RESET(userData))
     navigate("/login")
@@ -86,10 +103,15 @@ export default function ChangePassword() {
                     onChange={handleInputChange}
                   />
                 </p>
+                {isLoading ? <Spinner/>: (
+                <button
+                type="submit"
+                className="--btn --btn-danger --btn-block"
+              >
+                Change Password
+              </button>
+                )}
 
-                <div className="--btn --btn-danger --btn-block">
-                  Change Profile
-                </div>
               </form>
             </div>
           </Card>
