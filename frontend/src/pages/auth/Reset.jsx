@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import { MdPassword } from "react-icons/md";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
 import Loader from "../../components/loader/Loader";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { RESET, resetPassword } from "../../redux/features/auth/authSlice";
 
 const initialState = {
   password: "",
@@ -17,9 +18,12 @@ export default function Reset() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { isLoading } = useSelector((state) => state.auth);
+  const { isLoading, isLoggedIn, isSuccess, message } = useSelector(
+    (state) => state.auth
+  );
 
-  const { password, password2 } = formData;
+  const { password, password2} = formData;
+  const {resetToken} = useParams()
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -29,7 +33,7 @@ export default function Reset() {
   const reset = async (e) => {
     e.preventDefault();
 
-    if (password.length < 6 || password2.length < 6) {
+    if (password.length < 6) {
       return toast.error("Password must be at least 6 characters");
     }
 
@@ -38,12 +42,18 @@ export default function Reset() {
     }
 
     const userData = {
-      email,
+      password,
     };
 
-    await dispatch(forgotPassword(userData));
-    await dispatch(RESET(userData));
+    await dispatch(resetPassword({userData, resetToken}));
   };
+
+  useEffect(() => {
+    if (isSuccess && message.includes("Reset sucessful")) {
+      navigate("/login");
+    }
+    dispatch(RESET());
+  }, [dispatch, navigate, message,isSuccess ]);
 
   return (
     <div className={`container ${styles.auth}`}>

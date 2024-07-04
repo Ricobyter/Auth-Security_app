@@ -610,7 +610,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
   res
     .status(200)
-    .json({ message: "Password Reset Was sucessful. Please Login again" });
+    .json({ message: "Password Reset sucessful. Please Login again" });
 });
 
 //? Change Password
