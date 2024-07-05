@@ -214,6 +214,60 @@ export const resetPassword = createAsyncThunk(
     }
   );
   
+//Get users
+export const getUsers = createAsyncThunk(
+    "auth/getUsers",
+    async (_, thunkAPI) => {
+      try {
+        return await authService.getUsers();
+      } catch (error) {
+        const message =
+          (error.response &&
+            error.response.data &&
+            error.response.data.message) ||
+          error.message ||
+          error.toString();
+        return thunkAPI.rejectWithValue(message);
+      }
+    }
+  );
+  
+//Delete User
+export const deleteUser = createAsyncThunk(
+    "auth/deleteUser",
+    async (id, thunkAPI) => {
+      try {
+        return await authService.deleteUser(id);
+      } catch (error) {
+        const message =
+          (error.response &&
+            error.response.data &&
+            error.response.data.message) ||
+          error.message ||
+          error.toString();
+        return thunkAPI.rejectWithValue(message);
+      }
+    }
+  );
+  
+//Upgrade User
+export const upgradeUser = createAsyncThunk(
+    "auth/upgradeUser",
+    async (userData, thunkAPI) => {
+      try {
+        return await authService.upgradeUser(userData);
+      } catch (error) {
+        const message =
+          (error.response &&
+            error.response.data &&
+            error.response.data.message) ||
+          error.message ||
+          error.toString();
+        return thunkAPI.rejectWithValue(message);
+      }
+    }
+  );
+  
 
 const authSlice = createSlice({
     name: "auth",
@@ -405,7 +459,7 @@ const authSlice = createSlice({
             state.message= action.payload;
             toast.error(action.payload)
         })
-        //Rset Password
+        //Reset Password
         .addCase(resetPassword.pending, (state,action)=>{
             state.isLoading = true
         })
@@ -416,6 +470,53 @@ const authSlice = createSlice({
             toast.success(action.payload)
         })
         .addCase(resetPassword.rejected, (state,action)=>{
+            state.isLoading = false
+            state.isError= true;
+            state.message= action.payload;
+            toast.error(action.payload)
+        })
+        //Get users
+        .addCase(getUsers.pending, (state,action)=>{
+            state.isLoading = true
+        })
+        .addCase(getUsers.fulfilled, (state,action)=>{
+            state.isLoading = false
+            state.isSuccess= true;
+            state.users = action.payload;
+        })
+        .addCase(getUsers.rejected, (state,action)=>{
+            state.isLoading = false
+            state.isError= true;
+            state.message= action.payload;
+            toast.error(action.payload)
+        })
+        //Delete User
+        .addCase(deleteUser.pending, (state,action)=>{
+            state.isLoading = true
+        })
+        .addCase(deleteUser.fulfilled, (state,action)=>{
+            state.isLoading = false
+            state.isSuccess= true;
+            state.message = action.payload;
+            toast.success(action.payload)
+        })
+        .addCase(deleteUser.rejected, (state,action)=>{
+            state.isLoading = false
+            state.isError= true;
+            state.message= action.payload;
+            toast.error(action.payload)
+        })
+        //Upgrade User
+        .addCase(upgradeUser.pending, (state,action)=>{
+            state.isLoading = true
+        })
+        .addCase(upgradeUser.fulfilled, (state,action)=>{
+            state.isLoading = false
+            state.isSuccess= true;
+            state.message = action.payload;
+            toast.success(action.payload)
+        })
+        .addCase(upgradeUser.rejected, (state,action)=>{
             state.isLoading = false
             state.isError= true;
             state.message= action.payload;

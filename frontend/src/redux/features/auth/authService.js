@@ -76,6 +76,24 @@ const resetPassword = async (userData, resetToken) => {
   return response.data.message;
 };
 
+//Get users
+const getUsers = async () => {
+  const response = await axios.get(API_URL + "getUsers" );
+  return response.data;
+};
+
+//Delet User
+const deleteUser = async (id) => {
+  const response = await axios.delete(API_URL + id );
+  return response.data.message;
+};
+
+//upgrade User
+const upgradeUser = async (userData) => {
+  const response = await axios.post(API_URL + "upgradeUser", userData );
+  return response.data.message;
+};
+
 const authService = {
     register,
     login,
@@ -87,7 +105,10 @@ const authService = {
     verifyUser,
     changePassword,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    getUsers,
+    deleteUser,
+    upgradeUser
 }
 
 export default authService

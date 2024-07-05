@@ -21,6 +21,9 @@ import {
   selectIsLoggedIn,
   selectUser,
 } from "./redux/features/auth/authSlice";
+import AllUsersCard from "./pages/allUsersCard/AllUsersCard";
+
+
 
 axios.defaults.withCredentials = true;
 
@@ -85,6 +88,14 @@ function App() {
             element={
               <Layout>
                 <UserList />
+              </Layout>
+            }
+          />
+          <Route
+            path="/allUsersCard"
+            element={
+              <Layout>
+                <AllUsersCard />
               </Layout>
             }
           />

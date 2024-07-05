@@ -1,0 +1,57 @@
+/* AllUsersCard.scss */
+
+.all-users-card {
+  .mt-10 {
+    margin-top: 10px;
+  }
+
+  .card-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: space-between;
+
+    @media (max-width: 768px) {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+
+  .card {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 10px;
+    flex: 1 1 calc(25% - 20px); /* 4 cards in a row for large screens */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: calc(25% - 20px); /* 4 cards in a row for large screens */
+
+    @media (max-width: 768px) {
+      flex: 1 1 calc(50% - 20px); /* 2 cards in a row for mobile screens */
+      max-width: calc(50% - 20px); /* 2 cards in a row for mobile screens */
+    }
+
+    img {
+      border-radius: 100%;
+      margin-bottom: 20px; /* Margin for spacing in column layout */
+    }
+
+    h3 {
+      font-size: 1.5em;
+      margin: 0 0 10px 0;
+      color: #333;
+      text-align: center; /* Center text in column layout */
+    }
+
+    p {
+      margin: 0;
+      color: #666;
+      text-align: center; /* Center text in column layout */
+    }
+  }
+}
