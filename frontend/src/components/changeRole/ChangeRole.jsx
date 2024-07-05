@@ -28,7 +28,6 @@ const ChangeRole = ({ _id, email }) => {
       reply_to : "noreply@rico.com",
       template: "changeRole",
       url : "/login"
-
     }
 
     await dispatch(upgradeUser(userData))
