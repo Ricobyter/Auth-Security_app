@@ -60,6 +60,21 @@ function UserList() {
     dispatch(FILTER_USERS({ users, search }));
   }, [dispatch, users, search]);
 
+  //Begin Pagination 
+  const itemsPerPage = 2;
+  const [itemOffset, setItemOffset] = useState(0);
+
+  const endOffset = itemOffset + itemsPerPage;
+  const currentItems = filteredUsers.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(filteredUsers.length / itemsPerPage);
+
+  // Invoke when user click to request another page.
+  const handlePageClick = (event) => {
+    const newOffset = (event.selected * itemsPerPage) % filteredUsers.length;
+    setItemOffset(newOffset);
+  };
+
+  //End Pagination
   return (
     <section>
       <div className="container">
@@ -95,7 +110,7 @@ function UserList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredUsers.map((user, index) => {
+                  {currentItems.map((user, index) => {
                     const { _id, name, email, role } = user;
 
                     return (
@@ -122,7 +137,22 @@ function UserList() {
                 </tbody>
               </table>
             )}
+            <hr />
           </div>
+          <ReactPaginate
+        breakLabel="..."
+        nextLabel="Next >"
+        onPageChange={handlePageClick}
+        pageRangeDisplayed={3}
+        pageCount={pageCount}
+        previousLabel="< Prev"
+        renderOnZeroPageCount={null}
+        containerClassName="pagination"
+        pageLinkClassName="page-num"
+        previousLinkClassName="page-num"
+        nextLinkClassName="page-num"
+        activeLinkClassName="activePage"
+      />
         </div>
       </div>
     </section>

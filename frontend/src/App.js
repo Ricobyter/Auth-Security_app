@@ -22,6 +22,8 @@ import {
   selectUser,
 } from "./redux/features/auth/authSlice";
 import AllUsersCard from "./pages/allUsersCard/AllUsersCard";
+import { GoogleOAuthProvider } from '@react-oauth/google';
+
 
 
 
@@ -43,6 +45,8 @@ function App() {
     <>
       <BrowserRouter>
         <ToastContainer />
+        
+<GoogleOAuthProvider clientId="<your_client_id>">
         <Routes>
           <Route
             path="/"
@@ -100,6 +104,7 @@ function App() {
             }
           />
         </Routes>
+        </GoogleOAuthProvider>
       </BrowserRouter>
     </>
   );

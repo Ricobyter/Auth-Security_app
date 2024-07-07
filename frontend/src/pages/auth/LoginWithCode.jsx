@@ -1,21 +1,55 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import { GrInsecure } from "react-icons/gr";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import { loginWithCode, RESET, sendLoginCode } from "../../redux/features/auth/authSlice";
+import Loader from "../../components/loader/Loader";
 
 export default function LoginWithCode() {
   const [loginCode, setLoginCode] = useState("");
+  const { email } = useParams();
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
 
-  const handleInputChange = () => {
-    // setEmail(e.target.value);
-    // setPassword(e.target.value)
-  };
+  const { isLoading, isLoggedIn, isSuccess } = useSelector(
+    (state) => state.auth
+  );
 
-  const loginUser = () => {};
+  const sendUserLoginCode = async () => {
+  await dispatch(sendLoginCode(email))
+  await dispatch(RESET())
+  }
+
+  const loginUserWithCode = async (e) => {
+    e.preventDefault()
+  if(loginCode === ""){
+    return toast.error("Please enter login code")
+  }
+  if(loginCode.length !== 6){
+    return toast.error("Access code must be of 6 digits")
+  }
+
+  const code = {
+    loginCode
+  }
+
+  await dispatch(loginWithCode({code, email}))
+  }
+
+  useEffect(() => {
+    if (isSuccess && isLoggedIn) {
+      navigate("/profile");
+    }
+
+    dispatch(RESET());
+  }, [isLoggedIn, isSuccess, dispatch, navigate]);
   return (
     <div className={`container ${styles.auth}`}>
+      {isLoading && <Loader />}
       <Card>
         <div className={styles.form}>
           <div className="--flex-center">
@@ -23,7 +57,7 @@ export default function LoginWithCode() {
           </div>
           <h2>Enter Acces Code</h2>
 
-          <form onSubmit={loginUser}>
+          <form onSubmit={loginUserWithCode}>
             <input
               type="text"
               required
@@ -41,7 +75,7 @@ export default function LoginWithCode() {
             <Link to="/">- Home</Link>
             </p>
 
-            <p className="v-link --color-primary">
+            <p onClick={sendUserLoginCode} className="v-link --color-primary">
            <b>Resend Code</b>
             </p>
           </div>

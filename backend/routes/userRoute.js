@@ -16,7 +16,8 @@ const {
   resetPassword,
   changePassword,
   sendLoginCode,
-  loginWithCode
+  loginWithCode,
+  loginWithGoogle
 } = require("../controllers/userController");
 const {
   protect,
@@ -45,5 +46,7 @@ router.patch("/changePassword", protect, changePassword);
 
 router.post("/sendLoginCode/:email", sendLoginCode);
 router.post("/loginWithCode/:email", loginWithCode);
+
+router.post("/google/callback", loginWithGoogle);
 
 module.exports = router;
