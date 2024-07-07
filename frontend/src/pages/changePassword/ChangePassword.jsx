@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import "./ChangePassword.scss";
 import Card from "../../components/card/Card";
 import PageMenu from "../../components/pageMenu/PageMenu";
@@ -20,7 +20,7 @@ const initialState = {
 export default function ChangePassword() {
   useRedirectLoggedOutUser("/login");
 
-  const { isLoading, user } = useSelector(
+  const { isLoading, user, isSuccess, isError } = useSelector(
     (state) => state.auth
   );
 
@@ -58,15 +58,44 @@ export default function ChangePassword() {
       reply_to : "noreply@rico.com",
       template: "changePassword",
       url : "/forgot"
+   
+    }
 
+    if(oldPassword !== user.password){
+      return toast.error("Old Password does not match")
     }
 
     await dispatch(changePassword(userData))
+
     await dispatch(sendAutomatedEmail(emailData))
     await dispatch(logout())
     await dispatch(RESET(userData))
-    navigate("/login")
+    await navigate("/login")
+
+
   }
+  
+
+  // useEffect(() => {
+  //   const emailData ={
+  //     subject: "Password Changed - Auth-APP",
+  //     sent_to : user.email,
+  //     reply_to : "noreply@rico.com",
+  //     template: "changePassword",
+  //     url : "/forgot"
+   
+  //   }
+  //   if (isSuccess) {
+  //     // dispatch(sendAutomatedEmail(emailData))
+  //     dispatch(logout())
+  //     navigate("/login");
+  //   }
+
+  //   if(isError){
+  //     toast.error("Something went wrong")
+  //   }
+  //   dispatch(RESET());
+  // }, [ isSuccess, dispatch, navigate, isError]);
   return (
     <section>
       <div className="container">

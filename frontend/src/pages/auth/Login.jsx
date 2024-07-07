@@ -1,50 +1,49 @@
 import React, { useEffect, useState } from "react";
-import styles from "./auth.module.scss";
-import Card from "../../components/card/Card";
-import { IoMdLogIn } from "react-icons/io";
-import { Link, useNavigate } from "react-router-dom";
-import PasswordInput from "../../components/passwordInput/PasswordInput";
+import { BiLogIn } from "react-icons/bi";
 import { useDispatch, useSelector } from "react-redux";
-import { validateEmail } from "../../redux/features/auth/authService";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { login, RESET, sendLoginCode } from "../../redux/features/auth/authSlice";
+import Card from "../../components/card/Card";
 import Loader from "../../components/loader/Loader";
+import PasswordInput from "../../components/passwordInput/PasswordInput";
+import { validateEmail } from "../../redux/features/auth/authService";
+import {
+  login,
+  loginWithGoogle,
+  RESET,
+  sendLoginCode,
+} from "../../redux/features/auth/authSlice";
+import styles from "./auth.module.scss";
+import { GoogleLogin } from "@react-oauth/google";
 
 const initialState = {
   email: "",
   password: "",
 };
 
-export default function Login() {
+const Login = () => {
   const [formData, setFormData] = useState(initialState);
-
   const { email, password } = formData;
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { isLoading, isLoggedIn, isSuccess, message, isError , twoFactor } = useSelector(
-    (state) => state.auth
-  );
+  const { isLoading, isLoggedIn, isSuccess, message, isError, twoFactor } =
+    useSelector((state) => state.auth);
 
   const loginUser = async (e) => {
     e.preventDefault();
 
-    if (!password || !email) {
-      return toast.error("Please fill all the fields");
-    }
-
-    if (password.length < 6) {
-      return toast.error("Password must be at least 6 characters");
+    if (!email || !password) {
+      return toast.error("All fields are required");
     }
 
     if (!validateEmail(email)) {
-      return toast.error("Invalid Email");
+      return toast.error("Please enter a valid email");
     }
 
     const userData = {
@@ -52,7 +51,7 @@ export default function Login() {
       password,
     };
 
-    //  console.log(userData)
+    // console.log(userData);
     await dispatch(login(userData));
   };
 
@@ -61,13 +60,20 @@ export default function Login() {
       navigate("/profile");
     }
 
-    if(isError && twoFactor){
-      dispatch(sendLoginCode(email))
-      navigate(`/loginWithCode/${email}`)
+    if (isError && twoFactor) {
+      dispatch(sendLoginCode(email));
+      navigate(`/loginWithCode/${email}`);
     }
 
     dispatch(RESET());
   }, [isLoggedIn, isSuccess, dispatch, navigate, isError, twoFactor, email]);
+
+  const googleLogin = async (credentialResponse) => {
+    console.log(credentialResponse);
+    await dispatch(
+      loginWithGoogle({ userToken: credentialResponse.credential })
+    );
+  };
 
   return (
     <div className={`container ${styles.auth}`}>
@@ -75,11 +81,19 @@ export default function Login() {
       <Card>
         <div className={styles.form}>
           <div className="--flex-center">
-            <IoMdLogIn size={35} color="#999" />
+            <BiLogIn size={35} color="#999" />
           </div>
           <h2>Login</h2>
           <div className="--flex-center">
-            <button className="--btn --btn-google">Login with Google</button>
+            {/* <button className="--btn --btn-google">Login With Google
+            </button> */}
+            <GoogleLogin
+              onSuccess={googleLogin}
+              onError={() => {
+                console.log("Login Failed");
+                toast.error("Login Failed");
+              }}
+            />
           </div>
           <br />
           <p className="--text-center --fw-bold">or</p>
@@ -87,8 +101,8 @@ export default function Login() {
           <form onSubmit={loginUser}>
             <input
               type="email"
-              required
               placeholder="Email"
+              required
               name="email"
               value={email}
               onChange={handleInputChange}
@@ -100,18 +114,20 @@ export default function Login() {
               onChange={handleInputChange}
             />
 
-            <button className="--btn --btn-primary --btn-block" type="submit">
+            <button type="submit" className="--btn --btn-primary --btn-block">
               Login
             </button>
           </form>
-          <Link to="/forgot">Forgot password</Link>
+          <Link to="/forgot">Forgot Password</Link>
           <span className={styles.register}>
             <Link to="/">Home</Link>
-            <p>&nbsp; Don't have an account ? &nbsp;</p>
+            <p> &nbsp; Don't have an account? &nbsp;</p>
             <Link to="/register">Register</Link>
           </span>
         </div>
       </Card>
     </div>
   );
-}
+};
+
+export default Login;

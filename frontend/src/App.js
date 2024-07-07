@@ -46,7 +46,7 @@ function App() {
       <BrowserRouter>
         <ToastContainer />
         
-<GoogleOAuthProvider clientId="<your_client_id>">
+<GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
         <Routes>
           <Route
             path="/"

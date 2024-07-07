@@ -293,7 +293,7 @@ export const loginWithCode = createAsyncThunk(
   }
 );
 
-//Login With Google
+// loginWithGoogle
 export const loginWithGoogle = createAsyncThunk(
   "auth/loginWithGoogle",
   async (userToken, thunkAPI) => {
@@ -631,8 +631,8 @@ const authSlice = createSlice({
         state.message = action.payload;
         toast.error(action.payload);
       })
-      //loginWithGoogle
-      .addCase(loginWithGoogle.pending, (state, action) => {
+      // loginWithGoogle
+      .addCase(loginWithGoogle.pending, (state) => {
         state.isLoading = true;
       })
       .addCase(loginWithGoogle.fulfilled, (state, action) => {
@@ -640,15 +640,15 @@ const authSlice = createSlice({
         state.isSuccess = true;
         state.isLoggedIn = true;
         state.user = action.payload;
-        toast.success("Login successful");
+        toast.success("Login Successful");
       })
       .addCase(loginWithGoogle.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
-        state.user= null;
         state.message = action.payload;
+        state.user = null;
         toast.error(action.payload);
-      })
+      });
   },
 });
 

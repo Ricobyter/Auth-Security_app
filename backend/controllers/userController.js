@@ -9,8 +9,11 @@ const sendEmail = require("../utils/sendEmail");
 const Token = require("../models/tokenModel");
 const crypto = require("crypto");
 const Cryptr = require("cryptr");
+const { OAuth2Client } = require("google-auth-library");
 
 const cryptr = new Cryptr(process.env.CRYPTR_KEY);
+
+const client = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
 
 //? Register
 const registerUser = asyncHandler(async (req, res) => {
@@ -646,12 +649,93 @@ const changePassword = asyncHandler(async (req, res) => {
 });
 
 const loginWithGoogle = asyncHandler(async (req, res) => {
-  const {userToken} = req.body
-  console.log(userToken)
+  const { userToken } = req.body;
+  //   console.log(userToken);
 
-  res.send("Google Login")
+  const ticket = await client.verifyIdToken({
+    idToken: userToken,
+    audience: process.env.GOOGLE_CLIENT_ID,
+  });
+
+  const payload = ticket.getPayload();
+  const { name, email, picture, sub } = payload;
+  const password = Date.now() + sub;
+
+  // Get UserAgent
+  const ua = parser(req.headers["user-agent"]);
+  const userAgent = [ua.ua];
+
+  // Check if user exists
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    //   Create new user
+    const newUser = await User.create({
+      name,
+      email,
+      password,
+      photo: picture,
+      isVerified: true,
+      userAgent,
+    });
+
+    if (newUser) {
+      // Generate Token
+      const token = generateToken(newUser._id);
+
+      // Send HTTP-only cookie
+      res.cookie("token", token, {
+        path: "/",
+        httpOnly: true,
+        expires: new Date(Date.now() + 1000 * 86400), // 1 day
+        sameSite: "none",
+        secure: true,
+      });
+
+      const { _id, name, email, phone, bio, photo, role, isVerified } = newUser;
+
+      res.status(201).json({
+        _id,
+        name,
+        email,
+        phone,
+        bio,
+        photo,
+        role,
+        isVerified,
+        token,
+      });
+    }
+  }
+
+  // User exists, login
+  if (user) {
+    const token = generateToken(user._id);
+
+    // Send HTTP-only cookie
+    res.cookie("token", token, {
+      path: "/",
+      httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 86400), // 1 day
+      sameSite: "none",
+      secure: true,
+    });
+
+    const { _id, name, email, phone, bio, photo, role, isVerified } = user;
+
+    res.status(201).json({
+      _id,
+      name,
+      email,
+      phone,
+      bio,
+      photo,
+      role,
+      isVerified,
+      token,
+    });
+  }
 });
-
 module.exports = {
   registerUser,
   loginUser,
@@ -674,5 +758,3 @@ module.exports = {
 };
 
 //? Check register through --> body--> url-encoded
-
-
